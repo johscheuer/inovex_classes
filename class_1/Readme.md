@@ -36,7 +36,7 @@ $ sudo nsenter --net=/var/run/netns/test ping 8.8.8.8
 
 ### cgroups
 
-First let's start a `pod` to look at (we will see later what a "Pod" actually is):
+First let's start a `pod` to look at (we will see later what a "Pod" actually is). You need to run this command from *your laptop*:
 
 ```
 kubectl apply -f resources/cgroups_test.yml
@@ -55,8 +55,8 @@ $ systemd-cgls /kubepods
 $ systemd-cgls /kubepods/besteffort
 # Let's see all "burstable" pods
 $ systemd-cgls /kubepods/besteffort
-# look at our nginx pod use your own pod ID
-# TODO fetch pod ID
+# On your laptop you can fetcht the POodUID with: `kubectl get po nginx -o jsonpath='{.metadata.uid}'`
+# look at our nginx pod use your own Pod UID
 $ systemd-cgls /kubepods/pod5aaf719d-bb4d-11e8-bd46-080027e3a1c7
 # You will see something similar to this
 Control group /kubepods/pod5aaf719d-bb4d-11e8-bd46-080027e3a1c7:
@@ -78,7 +78,6 @@ $ cat /proc/cgroups
 # show all resource controllers
 $ ls -lah /sys/fs/cgroup/
 # Show CPU limits
-# TODO
 $ cat /sys/fs/cgroup/cpu/kubepods/pod5aaf719d-bb4d-11e8-bd46-080027e3a1c7/cpu.shares
 # Show Memory limits divide the return value by 1024 / 1024
 $ cat /sys/fs/cgroup/memory/kubepods/pod5aaf719d-bb4d-11e8-bd46-080027e3a1c7/memory.limit_in_bytes
