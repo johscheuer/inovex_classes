@@ -174,7 +174,7 @@ $ cat /proc/1/mounts | wc -l
 # Count the mountpoints inside the container
 $ cat /proc/$(docker inspect nginx | jq -r '.[].State.Pid')/mounts | wc -l
 32
-# $(docker inspect nginx | jq -r '.[].State.Pid') will return the PID of the nginx mater process
+# $(docker inspect nginx | jq -r '.[].State.Pid') will return the PID of the nginx master process
 ```
 
 We can also see the according `cgroups` settings made by docker:
@@ -388,7 +388,7 @@ $ curl -v http://$(minikube ip):31945
 # You can also open the url in your browser, you must replace the "$(minikube ip)" with the actual value
 ```
 
-### Verify the load balancing
+### Kubernetes load balancing
 
 ```bash
 # We create a new deployment with a simple go application that returns information of the container
@@ -404,6 +404,37 @@ $ kubectl get po -l run=go-webserver
 $ watch -n 0.1 curl -s http://$(minikube ip):$(kubectl get service go-webserver -o jsonpath='{.spec.ports[].nodePort}')
 # Let's clean up
 $ kubectl delete deployment/go-webserver service/go-webserver
+```
+
+We will take a step-by-setp look at the iptables rules.
+
+```bash
+# Lists all rules of the NAT table (-t) for PREROUTING
+$ sudo iptables -n -t nat -L PREROUTING
+Chain PREROUTING (policy ACCEPT)
+target     prot opt source               destination
+KUBE-SERVICES  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service portals */
+DOCKER     all  --  0.0.0.0/0            0.0.0.0/0            ADDRTYPE match dst-type LOCAL
+# Lists all rules of the NAT table for the KUBE-SERVICES chain
+# This chain identifies the according service based on the VIP + dest Port
+$ sudo iptables -n -t nat -L KUBE-SERVICES | grep "default/my-nginx"
+# Target chain             prot. opt. source              dest.               comment
+KUBE-SVC-BEPXDJBUHFCSYIC3  tcp  --  0.0.0.0/0            10.100.91.46         /* default/my-nginx: cluster IP */ tcp dpt:80
+# See what rules the target chain contains
+# Take a look at the probability
+# This implements simple (statistically) round robin
+$ sudo iptables -n -t nat -L KUBE-SVC-BEPXDJBUHFCSYIC3
+Chain KUBE-SVC-BEPXDJBUHFCSYIC3 (2 references)
+target     prot opt source               destination
+KUBE-SEP-W5V2GENAPEE7LUNG  all  --  0.0.0.0/0            0.0.0.0/0            /* default/my-nginx: */ statistic mode random probability 0.33332999982
+KUBE-SEP-J5WBW7HEOGAHN6ZG  all  --  0.0.0.0/0            0.0.0.0/0            /* default/my-nginx: */ statistic mode random probability 0.50000000000
+KUBE-SEP-3ISEOL45OIX4A7WU  all  --  0.0.0.0/0            0.0.0.0/0            /* default/my-nginx: */
+# Choose ohne chain from above
+$ sudo iptables -n -t nat -L KUBE-SEP-J5WBW7HEOGAHN6ZG
+Chain KUBE-SEP-J5WBW7HEOGAHN6ZG (1 references)
+target     prot opt source               destination
+KUBE-MARK-MASQ  all  --  172.17.0.6           0.0.0.0/0            /* default/my-nginx: */ # Mark hairpin traffic (client == target) for SNAT
+DNAT       tcp  --  0.0.0.0/0            0.0.0.0/0            /* default/my-nginx: */ tcp to:172.17.0.6:80 # DNAT for endpoint
 ```
 
 ### Update resources
