@@ -157,7 +157,7 @@ In order to run a complete unprivileged container with docker run: `docker run -
 
 ### docker
 
-Lets' start a simple nginx (web server) as docker container:
+In `minikube` start a simple nginx (web server) as docker container:
 
 ```bash
 # create a simple nginx container with docker
@@ -198,7 +198,7 @@ $ cat /sys/fs/cgroup/cpu/docker/${CID}/tasks
 9119 # Master process
 9155 # worker process
 # We can see the same for memory
-$ cat /sys/fs/cgroup/memory/docker/${CID}/tasks
+$ cat /sys/fs/cgroup/memory/docker/${CID}/memory.limit_in_bytes
 134217728 # you need to divide this value again by / 1024 / 1024
 $ unset {CID}
 # Dockers default cgroup is under /docker
@@ -284,51 +284,6 @@ $ curl -k https://10.96.0.1
   },
   "code": 403
 }
-```
-
-### etcd - distributed key-value store
-
-```bash
-# Start a simple etcd K/V with a single node
-$ docker run -d --name etcd quay.io/coreos/etcd:v3.3
-# Jump into the etcd container
-$ docker exec -ti etcd /bin/sh
-# Show the member list of etcd
-$ etcdctl member lis
-# Show the status of the cluster
-$ etcdctl cluster-health
-# List all entries in the etcd (returns an emtpy list)
-$ etcdctl ls -r /
-# Create a directory in the K/V
-$ etcdctl mkdir /inovex/classes
-# Create our first key/value
-$ etcdctl set /inovec/classes/myvalue "hello world"
-# List all directories in the K/V
-$ etcdctl ls -r /
-# Fetch the value out of the K/V
-$ etcdctl get /inovex/classes/myvalue
-# Install curl and jq for later use
-$ apk --no-cache add curl jq
-# version
-$ curl -vv -s http://localhost:2379/version | jq '.'
-# Display the complete content
-# You will see the monothonic increasing index
-$ curl -vv -s http://localhost:2379/v2/keys?recursive=true | jq '.'
-# Create a second value
-$ etcdctl set /inovex/classes/myvalue2 "bye"
-# See the new indicies
-$ curl -vv -s http://localhost:2379/v2/keys/inovex/classes?recursive=true | jq '.'
-# Let's delete a key
-$ curl -vv -XDELETE -s http://localhost:2379/v2/keys/inovex/classes/myvalue2
-# See some statistice about the leader
-# the follower list is empty because we run etcd as a single instance
-$ curl -vv -s http://localhost:2379/v2/stats/leader | jq '.'
-# And some statistics about the node self
-$ curl -vv -s http://localhost:2379/v2/stats/self | jq '.'
-# See some statistics about the underlying storage
-$ curl -vv -s http://localhost:2379/v2/stats/store | jq '.'
-# clean up
-$ docker rm -f etcd
 ```
 
 ### Working with Kubernetes
@@ -458,4 +413,49 @@ $ kubectl set image deployments/my-nginx my-nginx=nginx:1.15.3-alpine
 $ kubectl rollout status deployment my-nginx --watch
 # We can check that the container are actually running the correct image
 $ kubectl get po -o jsonpath='{.items[*].spec.containers[].image}'
+```
+
+### etcd - distributed key-value store
+
+```bash
+# Start a simple etcd K/V with a single node
+$ docker run -d --name etcd quay.io/coreos/etcd:v3.3
+# Jump into the etcd container
+$ docker exec -ti etcd /bin/sh
+# Show the member list of etcd
+$ etcdctl member lis
+# Show the status of the cluster
+$ etcdctl cluster-health
+# List all entries in the etcd (returns an emtpy list)
+$ etcdctl ls -r /
+# Create a directory in the K/V
+$ etcdctl mkdir /inovex/classes
+# Create our first key/value
+$ etcdctl set /inovec/classes/myvalue "hello world"
+# List all directories in the K/V
+$ etcdctl ls -r /
+# Fetch the value out of the K/V
+$ etcdctl get /inovex/classes/myvalue
+# Install curl and jq for later use
+$ apk --no-cache add curl jq
+# version
+$ curl -vv -s http://localhost:2379/version | jq '.'
+# Display the complete content
+# You will see the monothonic increasing index
+$ curl -vv -s http://localhost:2379/v2/keys?recursive=true | jq '.'
+# Create a second value
+$ etcdctl set /inovex/classes/myvalue2 "bye"
+# See the new indicies
+$ curl -vv -s http://localhost:2379/v2/keys/inovex/classes?recursive=true | jq '.'
+# Let's delete a key
+$ curl -vv -XDELETE -s http://localhost:2379/v2/keys/inovex/classes/myvalue2
+# See some statistice about the leader
+# the follower list is empty because we run etcd as a single instance
+$ curl -vv -s http://localhost:2379/v2/stats/leader | jq '.'
+# And some statistics about the node self
+$ curl -vv -s http://localhost:2379/v2/stats/self | jq '.'
+# See some statistics about the underlying storage
+$ curl -vv -s http://localhost:2379/v2/stats/store | jq '.'
+# clean up
+$ docker rm -f etcd
 ```
