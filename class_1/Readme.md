@@ -143,6 +143,8 @@ ping: permission denied (are you root?)
 
 There are different tools available to find out which capabilties a process actually needs.
 
+In order to run a complete unprivileged container with docker run: `docker run -ti --cap-drop=ALL --user=nobody busybox`
+
 ### docker
 
 Lets' start a simple nginx (web server) as docker container:
@@ -195,14 +197,224 @@ $ systemd-cgls /docker
 
 ## Kubernetes high-level overview
 
-TODO
+ssh agin into minikube with `minikube` and show the currenty running system components:
 
-## etcd - distributed key-value store
+```bash
+# Show all pods of the control-plane
+$ sudo crictl pods --label=tier=control-plane
+# We see that kube-proxy is missig because it is a node components
+# The only component that doesn't run as pod is the kubelet:
+$ systemctl status kubelet
+```
 
-### Consensus
+### kube-proxy
 
-### Two gerneals' problem
+Show all rules written by `kube-proxy`:
 
-### Reality
+```bash
+# Lists all rules of the NAT table (-t) for PREROUTING
+$ sudo iptables -n -t nat -L PREROUTING
+Chain PREROUTING (policy ACCEPT)
+target     prot opt source               destination
+KUBE-SERVICES  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service portals */
+DOCKER     all  --  0.0.0.0/0            0.0.0.0/0            ADDRTYPE match dst-type LOCAL
+# Lists all rules of the NAT table for the KUBE-SERVICES chain
+$ sudo iptables -n -t nat -L KUBE-SERVICES
+Chain KUBE-SERVICES (2 references)
+target     prot opt source               destination
+KUBE-SVC-NPX46M4PTMTKRN6Y  tcp  --  0.0.0.0/0            10.96.0.1            /* default/kubernetes:https cluster IP */ tcp dpt:443
+KUBE-SVC-ERIFXISQEP7F7OF4  tcp  --  0.0.0.0/0            10.96.0.10           /* kube-system/kube-dns:dns-tcp cluster IP */ tcp dpt:53
+KUBE-SVC-TCOU7JCQXEZGVUNU  udp  --  0.0.0.0/0            10.96.0.10           /* kube-system/kube-dns:dns cluster IP */ udp dpt:53
+KUBE-SVC-XGLOHA7QRQ3V22RZ  tcp  --  0.0.0.0/0            10.96.199.224        /* kube-system/kubernetes-dashboard: cluster IP */ tcp dpt:80
+KUBE-SVC-2QFLXPI3464HMUTA  tcp  --  0.0.0.0/0            10.106.175.111       /* kube-system/default-http-backend: cluster IP */ tcp dpt:80
+KUBE-NODEPORTS  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service nodeports; NOTE: this must be the last rule in this chain */ ADDRTYPE match dst-type LOCAL
+# Choose the service for "default/kubernetes:https" e.g. KUBE-SVC-NPX46M4PTMTKRN6Y
+$ sudo iptables -n -t nat -L KUBE-SVC-NPX46M4PTMTKRN6Y
+Chain KUBE-SVC-NPX46M4PTMTKRN6Y (1 references)
+target     prot opt source               destination
+KUBE-SEP-HXBYGASQFZQQUDTL  all  --  0.0.0.0/0            0.0.0.0/0            /* default/kubernetes:https */ recent: CHECK seconds: 10800 reap name: KUBE-SEP-HXBYGASQFZQQUDTL side: source mask: 255.255.255.255
+KUBE-SEP-HXBYGASQFZQQUDTL  all  --  0.0.0.0/0            0.0.0.0/0            /* default/kubernetes:https */
+# List the endpoints of this service
+$ sudo iptables -n -t nat -L KUBE-SEP-HXBYGASQFZQQUDTL
+Chain KUBE-SEP-HXBYGASQFZQQUDTL (2 references)
+target     prot opt source               destination
+KUBE-MARK-MASQ  all  --  192.168.99.100       0.0.0.0/0            /* default/kubernetes:https */
+DNAT       tcp  --  0.0.0.0/0            0.0.0.0/0            /* default/kubernetes:https */ recent: SET name: KUBE-SEP-HXBYGASQFZQQUDTL side: source mask: 255.255.255.255 tcp to:192.168.99.100:8443
+```
 
-## Practical part
+*On your laptop* you can verify these steps by running the following two command:
+
+```bash
+# Compare the cluster-ip to the iptables rule
+$ kubectl get service
+NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   1h
+# Compare the endpoints of this service to the iptables rules
+$ kubectl get endpoints kubernetes
+NAME         ENDPOINTS             AGE
+kubernetes   192.168.99.100:8443   1h
+```
+
+You can also `curl` the API from inside `minikube`:
+
+```bash
+# We pass the -k because we don't provide the correct CA file
+$ curl -k https://10.96.0.1
+{
+  "kind": "Status",
+  "apiVersion": "v1",
+  "metadata": {
+
+  },
+  "status": "Failure",
+  "message": "forbidden: User \"system:anonymous\" cannot get path \"/\"",
+  "reason": "Forbidden",
+  "details": {
+
+  },
+  "code": 403
+}
+```
+
+### etcd - distributed key-value store
+
+```bash
+# Start a simple etcd K/V with a single node
+$ docker run -d --name etcd quay.io/coreos/etcd:v3.3
+# Jump into the etcd container
+$ docker exec -ti etcd /bin/sh
+# Show the member list of etcd
+$ etcdctl member lis
+# Show the status of the cluster
+$ etcdctl cluster-health
+# List all entries in the etcd (returns an emtpy list)
+$ etcdctl ls -r /
+# Create a directory in the K/V
+$ etcdctl mkdir /inovex/classes
+# Create our first key/value
+$ etcdctl set /inovec/classes/myvalue "hello world"
+# List all directories in the K/V
+$ etcdctl ls -r /
+# Fetch the value out of the K/V
+$ etcdctl get /inovex/classes/myvalue
+# Install curl and jq for later use
+$ apk --no-cache add curl jq
+# version
+$ curl -vv -s http://localhost:2379/version | jq '.'
+# Display the complete content
+# You will see the monothonic increasing index
+$ curl -vv -s http://localhost:2379/v2/keys?recursive=true | jq '.'
+# Create a second value
+$ etcdctl set /inovex/classes/myvalue2 "bye"
+# See the new indicies
+$ curl -vv -s http://localhost:2379/v2/keys/inovex/classes?recursive=true | jq '.'
+# Let's delete a key
+$ curl -vv -XDELETE -s http://localhost:2379/v2/keys/inovex/classes/myvalue2
+# See some statistice about the leader
+# the follower list is empty because we run etcd as a single instance
+$ curl -vv -s http://localhost:2379/v2/stats/leader | jq '.'
+# And some statistics about the node self
+$ curl -vv -s http://localhost:2379/v2/stats/self | jq '.'
+# See some statistics about the underlying storage
+$ curl -vv -s http://localhost:2379/v2/stats/store | jq '.'
+# clean up
+$ docker rm -f etcd
+```
+
+### Working with Kubernetes
+
+Run the following examples from your laptop. Let's start a simple nginx server:
+
+```bash
+# We can use kubectl directly to start a new deployment
+# We specify an image
+# We specify an port (nginx listens per default on port 80)
+# We add some labels to find our resources
+# We record any changes
+# We want to start 3 deployments of the nginx
+$ kubectl run --image=nginx --port=80 --labels='inovex=class' --record --replicas=3 my-nginx
+# Let's look at our deployment
+$ kubectl get deployments
+NAME       DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+my-nginx   3         3         3            3           4m
+# Let's look at our ReplicaSet (these are used by the Deployment)
+$ kubectl get replicaset
+NAME                  DESIRED   CURRENT   READY     AGE
+my-nginx-66699476fc   3         3         3         8m
+# Let's take a deeper look into the ReplicaSet
+$ kubectl describe rs my-nginx-66699476fc
+Name:           my-nginx-66699476fc
+Namespace:      default
+Selector:       inovex=class,pod-template-hash=2225503297
+Labels:         inovex=class
+                pod-template-hash=2225503297
+Annotations:    deployment.kubernetes.io/desired-replicas=3
+                deployment.kubernetes.io/max-replicas=4
+                deployment.kubernetes.io/revision=1
+                kubernetes.io/change-cause=kubectl run my-nginx --image=nginx --port=80 --labels=inovex=class --record=true --replicas=3
+Controlled By:  Deployment/my-nginx # this matches the name above
+Replicas:       3 current / 3 desired # all pods are running
+Pods Status:    3 Running / 0 Waiting / 0 Succeeded / 0 Failed
+...
+# Show all pods of the ReplicaSet
+$ kubectl get pods -l inovex
+NAME                        READY     STATUS    RESTARTS   AGE
+my-nginx-66699476fc-27dkx   1/1       Running   0          11m
+my-nginx-66699476fc-gz9wv   1/1       Running   0          11m
+my-nginx-66699476fc-hj4qc   1/1       Running   0          11m
+# Choose one pod and take a deeper look
+$ kubectl describe pods my-nginx-66699476fc-27dkx
+Name:           my-nginx-66699476fc-27dkx
+Namespace:      default
+Node:           minikube/10.0.2.15
+Start Time:     Thu, 20 Sep 2018 13:17:49 +0200
+Labels:         inovex=class
+                pod-template-hash=2225503297
+Annotations:    <none>
+Status:         Running
+IP:             172.17.0.6
+Controlled By:  ReplicaSet/my-nginx-66699476fc # this matches the name from above
+....
+# Okay now we have 3 nginx containers runnning now what?
+# Let's expose the containers to the outside of the cluster
+# This command exposes the deployment my-nginx on a so-called NodePort
+# The NodePort will be opend on all nodes and load balances traffic to the service
+$ kubectl expose deployment my-nginx -l 'inovex=class' --port=80 --record --type=NodePort
+# Let's get the NodePort of the service
+$ kubectl get service my-nginx
+NAME       TYPE       CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
+my-nginx   NodePort   10.100.91.46   <none>        80:31945/TCP   1m
+# Now we can access the service from the outside of the cluster
+$ curl -v http://$(minikube ip):31945
+# You can also open the url in your browser, you must replace the "$(minikube ip)" with the actual value
+```
+
+### Verify the load balancing
+
+```bash
+# We create a new deployment with a simple go application that returns information of the container
+$ kubectl run --image=johscheuer/go-webserver --port=8000 --record --replicas=3 go-webserver
+# Now we can expose the containers again
+$ kubectl expose deployment/go-webserver --type=NodePort
+# Ensure all pods are running
+# The run=go-webserver was created automatically be the run command
+$ kubectl get po -l run=go-webserver
+# Now we can make a request against the service
+# If you are on Windows just reload your browser multiple times
+# Notive that the IP address changes always (expect for localhost)
+$ watch -n 0.1 curl -s http://$(minikube ip):$(kubectl get service go-webserver -o jsonpath='{.spec.ports[].nodePort}')
+# Let's clean up
+$ kubectl delete deployment/go-webserver service/go-webserver
+```
+
+### Update resources
+
+```bash
+# We can change the image of a deployment with a simple command
+$ kubectl set image deployments/my-nginx my-nginx=nginx:1.15.3-alpine
+# Now we can watch the so called rollout of the new "version"
+# During the complete rollout you can still access the service
+$ kubectl rollout status deployment my-nginx --watch
+# We can check that the container are actually running the correct image
+$ kubectl get po -o jsonpath='{.items[*].spec.containers[].image}'
+```
