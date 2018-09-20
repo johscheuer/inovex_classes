@@ -45,8 +45,15 @@ kubectl apply -f resources/cgroups_test.yml
 We can interact with the cgroups with the systemd utils (obviously only on Linux systems with systemd which should be the majority):
 
 ```bash
+# Jumo back into the VM
+$ minikube ssh
 # Show all default slices
 $ systemctl list-units --type slice
+UNIT               LOAD   ACTIVE SUB    DESCRIPTION
+-.slice            loaded active active Root Slice
+system-getty.slice loaded active active system-getty.slice
+system.slice       loaded active active System Slice
+user.slice         loaded active active User and Session Slice
 # Show hierachy like a directory
 $ systemd-cgls
 # show all Kubernetes pods
@@ -54,9 +61,9 @@ $ systemd-cgls /kubepods
 # Let's dig deeper and see all "besteffort" pods
 $ systemd-cgls /kubepods/besteffort
 # Let's see all "burstable" pods
-$ systemd-cgls /kubepods/besteffort
-# On your laptop you can fetcht the POodUID with: `kubectl get po nginx -o jsonpath='{.metadata.uid}'`
-# look at our nginx pod use your own Pod UID
+$ systemd-cgls /kubepods/burstable
+# On your laptop you can fetch the Pod UID with: `kubectl get po nginx -o jsonpath='{.metadata.uid}'`
+# Look at our nginx pod use your own Pod UID
 $ systemd-cgls /kubepods/pod5aaf719d-bb4d-11e8-bd46-080027e3a1c7
 # You will see something similar to this
 Control group /kubepods/pod5aaf719d-bb4d-11e8-bd46-080027e3a1c7:
@@ -85,6 +92,8 @@ $ cat /sys/fs/cgroup/memory/kubepods/pod5aaf719d-bb4d-11e8-bd46-080027e3a1c7/mem
 ```
 
 ### Layered filesystem
+
+In `minikube` run the following commands:
 
 ```bash
 # Start a simple nginx with docker
@@ -115,6 +124,8 @@ docker image history nginx
 ### Capabilities
 
 The list of the default allowed capabilities for docker container can be found in the [official documentation](https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities)
+
+In `minikube` run the following commands:
 
 ```bash
 # Let's start an interactive container with nginx and no capabilities
