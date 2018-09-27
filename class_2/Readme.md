@@ -192,6 +192,7 @@ todo-app-85496f5c55-hz5rw       1m           4Mi
 $ kubectl -n todo-app autoscale deployment todo-app --min=1 --max=10 --cpu-percent=40
 horizontalpodautoscaler.autoscaling/todo-app autoscaled
 # Let's look at the auto scaler
+$ kubectl -n todo-app get hpa
 NAME       REFERENCE             TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
 todo-app   Deployment/todo-app   1%/40%    1         10        1          8m
 # We can already see that the HPA has reduced the number of Pods
