@@ -16,7 +16,7 @@ deployment.apps/simple created
 # Let's see if everything worked
 $ kubectl get deployment simple
 NAME      DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
-simple    1         1         1            1           4s
+simple    3         3         3            3           2m
 # With the following command we get more information about the object
 # You will see that Kubernetes uses many defaults
 $ kubectl describe deployment simple
