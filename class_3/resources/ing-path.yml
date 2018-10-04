@@ -4,15 +4,13 @@ metadata:
   name: demo-ingress
 spec:
   rules:
-  - host: nginx.bar.com
-    http:
+  - http:
       paths:
-      - backend:
+      - path: /nginx
+        backend:
           serviceName: nginx
           servicePort: 80
-  - host: httpd.foo.com
-    http:
-      paths:
-      - backend:
+      - path: /httpd
+        backend:
           serviceName: httpd
           servicePort: 80
