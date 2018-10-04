@@ -42,6 +42,8 @@ pod "shared-state" deleted
 In this example we will create dynamically an `Persistent Volume`
 
 ```bash
+# Ensure that the storage-provisioning is enabled
+$ minikube addons enable storage-provisioner
 # Start with the creation of the PVC
 $ kubectl apply -f resources/pvc-demo.yml
 persistentvolumeclaim/pvc-demo created
@@ -313,12 +315,13 @@ service "httpd" deleted
 # We need to set the correct RBAC rules, this allows Prometheus to scrape things in the cluster
 $ kubectl apply -f https://raw.githubusercontent.com/inovex/trovilo/master/examples/k8s/rbac-setup.yml
 # Obviously we need to deploy Prometheus itself (and the configuration)
-$ kubectl apply -f kubectl apply -f resources/prometheus.yml
+$ kubectl apply -f resources/prometheus.yml
 # Now we can check prometheus
 # You can also create an ingress resource for Prometheus :)
 $ kubectl port-forward deployment/prometheus 9090:9090
 Forwarding from 127.0.0.1:9090 -> 9090
 Forwarding from [::1]:9090 -> 9090
+# Open in your Browser "http://localhost:9090"
 # Go to status -> targets
 # After some time you should see that everything get's green
 ```
@@ -358,4 +361,5 @@ $ kubectl apply -f resources/grafana.yml
 ...
 # Wait until the Pod is ready, now you can port-forward to Grafana
 $ kubectl port-forward deployment/grafana 3000:3000
+# Open in your Browser "http://localhost:3000"
 ```
