@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: pvc-demo
+ labels:
+  app: pvc-demo
+spec:
+  selector:
+    matchLabels:
+      app: pvc-demo
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: pvc-demo
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+      - name: pvc-demo
+        image: ubuntu:18.04
+        command:
+          - /bin/bash
+          - -xec
+          - |
+            while true; do echo $(date) >> /pvc/my_file && sleep 1; done
+        volumeMounts:
+          - name: pvc-storage
+            mountPath: /pvc
+      volumes:
+      - name: pvc-storage
+        persistentVolumeClaim:
+          claimName: pvc-demo
