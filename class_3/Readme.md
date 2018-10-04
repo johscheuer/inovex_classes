@@ -9,7 +9,7 @@ $ minikube start --memory=4096
 
 ## Shared Volumes
 
-We can use Kubernetes volumes to share state between to containers inside a Pod:
+We can use Kubernetes volumes to share state between two containers inside a Pod:
 
 ```bash
 # We create a Pod that contains 2 containers that share the same volume
