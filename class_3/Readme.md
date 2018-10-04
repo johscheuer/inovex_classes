@@ -298,6 +298,11 @@ $ curl http://192.168.99.100/nginx
 </html>
 # With describe you get even more information
 $ kubectl describe ingress
+```
+
+**Task 1**: Rewrite the ingress resource to use [name based virtual hosting](https://kubernetes.io/docs/concepts/services-networking/ingress/#name-based-virtual-hosting). Hint: use `curl -H "HOST: httpd.foo.com" http://192.168.99.100` to specify the host in your curl command.
+
+```bash
 # Clean up
 $ kubectl delete deployment nginx httpd
 deployment.extensions "nginx" deleted
@@ -306,8 +311,6 @@ $ kubectl delete service nginx httpd
 service "nginx" deleted
 service "httpd" deleted
 ```
-
-**Task 1**: Rewrite the ingress resource to use [name based virtual hosting](https://kubernetes.io/docs/concepts/services-networking/ingress/#name-based-virtual-hosting). Hint: use `curl -H "HOST: httpd.foo.com" http://192.168.99.100` to specify the host in your curl command.
 
 # Prometheus (Monitoring)
 
