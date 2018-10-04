@@ -348,6 +348,11 @@ deployment.apps/todo-app created
 service/todo-app created
 # Wait a little bit until the apps are discoverd
 # Now inspect the metrics exposed by the application
+# For additional metrics we add the node exporter
+$ kubectl apply -f https://raw.githubusercontent.com/kubernetes/kubernetes/master/cluster/addons/prometheus/node-exporter-ds.yml
+# And kube-state-metrics
+$ kubectl apply -f https://raw.githubusercontent.com/kubernetes/kubernetes/master/cluster/addons/prometheus/kube-state-metrics-rbac.yaml
+$ kubectl apply -f https://raw.githubusercontent.com/kubernetes/kubernetes/master/cluster/addons/prometheus/kube-state-metrics-deployment.yaml
 ```
 
 ## Grafana
