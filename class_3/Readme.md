@@ -263,7 +263,7 @@ httpd        ClusterIP   10.106.68.252   <none>        80/TCP    1m
 kubernetes   ClusterIP   10.96.0.1       <none>        443/TCP   2h
 nginx        ClusterIP   10.108.77.200   <none>        80/TCP    4m
 # Check the connection with port-foward
-$ kubectl port-forward svc/httpd 080:80
+$ kubectl port-forward svc/httpd 8080:80
 Forwarding from 127.0.0.1:8080 -> 80
 Forwarding from [::1]:8080 -> 80
 Handling connection for 8080
