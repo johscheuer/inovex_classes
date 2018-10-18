@@ -66,7 +66,7 @@ CMD ["./gowiki"]
 Now we can build the Docker image:
 
 ```bash
-$ docker build -t johscheuer/gowiki:v1 .13:24:46
+$ docker build -t johscheuer/gowiki:v1
 Sending build context to Docker daemon  9.096MB
 Step 1/6 : FROM ubuntu:18.04
  ---> cd6d8154f1e1
@@ -103,7 +103,7 @@ What happend here? We compiled the binary for our platform which is obviously no
 ```bash
 # GOOS tells the platform to complie for
 # go env will print all current go env variables
-GOOS=linux go build -o gowiki .
+$ GOOS=linux go build -o gowiki .
 ```
 
 Build the container image again (notice that this time it builds much faster). Now we can start our wiki: `docker run --rm -ti -p 8080:8080 --name gowiki johscheuer/gowiki:v1` now you can access http://192.168.99.100:8080/edit/ANewPage in your Browser.
