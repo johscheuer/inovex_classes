@@ -24,3 +24,4 @@ $ kubectl cluster-info
 - [class_1](./class_1)
 - [class_2](./class_2)
 - [class_3](./class_3)
+- [class_4](./class_4)
