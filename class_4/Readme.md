@@ -3,7 +3,7 @@
 In the following steps we will use `minikube` to deploy and inspect the Kubernetes concepts:
 
 ```bash
-$ cd class_3
+$ cd class_4
 $ minikube start --memory=4096
 ```
 
@@ -66,7 +66,7 @@ CMD ["./gowiki"]
 Now we can build the Docker image:
 
 ```bash
-$ docker build -t johscheuer/gowiki:v1
+$ docker build -t johscheuer/gowiki:v1 .
 Sending build context to Docker daemon  9.096MB
 Step 1/6 : FROM ubuntu:18.04
  ---> cd6d8154f1e1
