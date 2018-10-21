@@ -144,7 +144,7 @@ Review the last classes and create the following:
 - An Kubernetes descriptor that creates an service for the gowiki
 - An Kubernetes descriptor for an ingress resource for gowiki
 
-**HINT** you can use `kubectl run --image johscheuer/gowiki:v1 --expose --port 8080 --replicas 1 -o yaml --dry-run --image-pull-policy=Always gowiki` for a skeleton.
+**HINT** you can use `kubectl run --image johscheuer/gowiki:v1 --expose --port 8080 --replicas 1 -o yaml --dry-run --image-pull-policy=IfNotPresent gowiki` for a skeleton.
 
 Apply all changes in your cluster and validate that the Wiki is available under https://192.168.99.100/view/ANewPage.
 
