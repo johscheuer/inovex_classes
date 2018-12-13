@@ -1,10 +1,10 @@
 # Introduction to Kubernetes
 
-Start [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/) `minikube start` for the local development. Validate that minikube is up and running: `minikube status` and that you can access minikube from your laptop `kubectl get nodes`. In order to explore the components of Kubernetes ssh into the Minikube VM: `minikube ssh`.
+Start [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/) with `minikube start` for the local development. Validate that minikube is up and running: `minikube status` and that you can access minikube from your laptop `kubectl get nodes`. In order to explore the components of Kubernetes ssh into the Minikube VM: `minikube ssh`.
 
 ## Kubernetes high-level overview
 
-ssh agin into minikube with `minikube` and show the currenty running system components:
+While `minikube ssh`-ed into your Minikube VM, show the currenty running system components:
 
 ```bash
 # Show all pods of the control-plane
