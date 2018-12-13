@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simple
+  labels:
+    app: simple
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: simple
+  template:
+    metadata:
+      name: simple
+      labels:
+        app: simple
+    spec:
+      containers:
+        - name: simple
+          image: nginx:1.15.3
