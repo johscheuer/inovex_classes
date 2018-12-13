@@ -1,20 +1,20 @@
 # Introduction to Kubernetes
 
-Start [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/) `minikube start` for the local development. Validate that minikube is up and running: `minikube status` and that you can access minikube from your laptop `kubectl get nodes`. In order to explore the components of Kubernetes ssh into the Minikube VM: `minikube ssh`.
+Start [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/) with `minikube start` for the local development. Validate that minikube is up and running: `minikube status` and that you can access minikube from your laptop `kubectl get nodes`. In order to explore the components of Kubernetes ssh into the Minikube VM: `minikube ssh`.
 
 ## Kubernetes high-level overview
 
-ssh agin into minikube with `minikube` and show the currenty running system components:
+While `minikube ssh`-ed into your Minikube VM, show the currently running system components:
 
 ```bash
 # Show all pods of the control-plane
 $ sudo crictl pods --label=tier=control-plane
-# We see that kubelet is missig because it is a node components
+# We see that kubelet is missing because it is a node component
 # The only component that doesn't run as pod is the kubelet:
 $ systemctl status kubelet
 ```
 
-### Working with Kubernetes
+## Working with Kubernetes
 
 Run the following examples from your laptop. Let's start a simple nginx server:
 
@@ -68,10 +68,10 @@ Status:         Running
 IP:             172.17.0.6
 Controlled By:  ReplicaSet/my-nginx-66699476fc # this matches the name from above
 ....
-# Okay now we have 3 nginx containers runnning now what?
+# Okay now we have 3 nginx containers running now what?
 # Let's expose the containers to the outside of the cluster
 # This command exposes the deployment my-nginx on a so-called NodePort
-# The NodePort will be opend on all nodes and load balances traffic to the service
+# The NodePort will be opened on all nodes and load balances traffic to the service
 $ kubectl expose deployment my-nginx -l 'inovex=class' --port=80 --record --type=NodePort
 # Let's get the NodePort of the service
 $ kubectl get service my-nginx
@@ -96,14 +96,15 @@ $ kubectl expose deployment/go-webserver --type=NodePort
 $ kubectl get po -l run=go-webserver
 # Now we can make a request against the service
 # If you are on Windows just reload your browser multiple times
-# Notive that the IP address changes always (expect for localhost)
+# Notice that the IP address changes always (expect for localhost)
 $ watch -n 0.1 curl -s http://$(minikube ip):$(kubectl get service go-webserver -o jsonpath='{.spec.ports[].nodePort}')
 # Let's clean up
 $ kubectl delete deployment/go-webserver service/go-webserver
 ```
 
-# Kubernetes concepts
-## Deployments
+## Kubernetes concepts
+
+### Deployments
 
 ```bash
 # We start with a simple deployment and take a look at it
@@ -193,12 +194,12 @@ $ kubectl scale deployment simple --replicas=1
 $ kubectl delete deployment simple
 ```
 
-## Complete example
+### Complete example
 
-We will use the example Demo Stack from here: https://github.com/johscheuer/todo-app-web
+We will use the example Demo Stack from here: <https://github.com/johscheuer/todo-app-web>
 
 ```bash
-# In the first step we clone the repo
+# In the first step we clone the repository
 $ git clone https://github.com/johscheuer/todo-app-web
 $ cd todo-app-web
 # Now we can start the demo stack
@@ -237,9 +238,9 @@ $ kubectl -n todo-app set image deployments/todo-app todo-app=johscheuer/todo-ap
 # You can also check the application in your Browser
 ```
 
-### Auto Scaling
+## Auto Scaling
 
-In order to use Auto Sclaing we need to enable the [Metrics Server](https://github.com/kubernetes-incubator/metrics-server):
+In order to use Auto Scaling we need to enable the [Metrics Server](https://github.com/kubernetes-incubator/metrics-server):
 
 ```bash
 # If we don't install the metrics server we get the following error message
