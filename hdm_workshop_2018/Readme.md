@@ -14,7 +14,7 @@ $ sudo crictl pods --label=tier=control-plane
 $ systemctl status kubelet
 ```
 
-# Working with Kubernetes
+## Working with Kubernetes
 
 Run the following examples from your laptop. Let's start a simple nginx server:
 
@@ -102,8 +102,9 @@ $ watch -n 0.1 curl -s http://$(minikube ip):$(kubectl get service go-webserver 
 $ kubectl delete deployment/go-webserver service/go-webserver
 ```
 
-# Kubernetes concepts
-## Deployments
+## Kubernetes concepts
+
+### Deployments
 
 ```bash
 # We start with a simple deployment and take a look at it
@@ -193,7 +194,7 @@ $ kubectl scale deployment simple --replicas=1
 $ kubectl delete deployment simple
 ```
 
-## Complete example
+### Complete example
 
 We will use the example Demo Stack from here: <https://github.com/johscheuer/todo-app-web>
 
@@ -237,7 +238,7 @@ $ kubectl -n todo-app set image deployments/todo-app todo-app=johscheuer/todo-ap
 # You can also check the application in your Browser
 ```
 
-# Auto Scaling
+## Auto Scaling
 
 In order to use Auto Scaling we need to enable the [Metrics Server](https://github.com/kubernetes-incubator/metrics-server):
 
