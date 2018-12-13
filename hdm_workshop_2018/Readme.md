@@ -8,7 +8,7 @@
 
 ## Setup Minikube
 
-Start [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/) `minikube start --kubernetes-version=v1.13.0` for the local development. Validate that minikube is up and running: `minikube status` and that you can access minikube from your laptop `kubectl get nodes`. In order to explore the components of Kubernetes ssh into the Minikube VM: `minikube ssh`.
+Start [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/) `minikube start` for the local development. Validate that minikube is up and running: `minikube status` and that you can access minikube from your laptop `kubectl get nodes`. In order to explore the components of Kubernetes ssh into the Minikube VM: `minikube ssh`.
 
 All inovex classes asume that you are inside of the Minikube VM. In order to be able to execute kubectl in Minikube we need to install `kubectl` and make the admin configuration available for the current user `docker`:
 
