@@ -1,6 +1,28 @@
 # Introduction to Kubernetes
 
-Start [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/) with `minikube start` for the local development. Validate that minikube is up and running: `minikube status` and that you can access minikube from your laptop `kubectl get nodes`. In order to explore the components of Kubernetes ssh into the Minikube VM: `minikube ssh`.
+## Prereq.
+
+- [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube) (tested: `v0.28.2`)
+- [Docker](https://docs.docker.com/install) (tested: `18.06.1-ce`)
+- SSH client (`Putty`/`OpenSSH`)
+
+## Setup Minikube
+
+Start [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/) `minikube start --kubernetes-version=v.1.13.0` for the local development. Validate that minikube is up and running: `minikube status` and that you can access minikube from your laptop `kubectl get nodes`. In order to explore the components of Kubernetes ssh into the Minikube VM: `minikube ssh`.
+
+All inovex classes asume that you are inside of the Minikube VM. In order to be able to execute kubectl in Minikube we need to install `kubectl` and make the admin configuration available for the current user `docker`:
+
+```bash
+$ curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.13.0/bin/linux/amd64/kubectl
+$ chmod +x kubectl
+$ sudo mv kubectl /bin
+$ mkdir -p ${HOME}/.kube
+$ sudo cp /etc/kubernetes/admin.conf ${HOME}/.kube/config
+$ sudo chown docker:docker ${HOME}/.kube/config
+$ kubectl cluster-info
+$ git clone https://github.com/johscheuer/inovex_classes
+$ cd inovex_classes/hdm_workshop_2018/
+```
 
 ## Kubernetes high-level overview
 
@@ -15,8 +37,6 @@ $ systemctl status kubelet
 ```
 
 ## Working with Kubernetes
-
-Run the following examples from your laptop. Let's start a simple nginx server:
 
 ```bash
 # We can use kubectl directly to start a new deployment
@@ -78,8 +98,9 @@ $ kubectl get service my-nginx
 NAME       TYPE       CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
 my-nginx   NodePort   10.100.91.46   <none>        80:31945/TCP   1m
 # Now we can access the service from the outside of the cluster
-# You can also open the url in your browser, you must replace the "$(minikube ip)" with the actual value
-$ curl -v http://$(minikube ip):31945
+# You can also open the url in your browser, you must replace 127.0.0.1 with the with the actual IP of the minikube VM
+# You can get the IP address with ip -o a s eth1 (default: 192.168.99.100)
+$ curl -v http://127.0.0.1:31945
 # Let's clean up
 $ kubectl delete deployment/my-nginx
 ```
@@ -97,7 +118,7 @@ $ kubectl get po -l run=go-webserver
 # Now we can make a request against the service
 # If you are on Windows just reload your browser multiple times
 # Notice that the IP address changes always (expect for localhost)
-$ watch -n 0.1 curl -s http://$(minikube ip):$(kubectl get service go-webserver -o jsonpath='{.spec.ports[].nodePort}')
+$ watch -n 0.1 curl -s http://127.0.0.1:$(kubectl get service go-webserver -o jsonpath='{.spec.ports[].nodePort}')
 # Let's clean up
 $ kubectl delete deployment/go-webserver service/go-webserver
 ```
@@ -231,7 +252,8 @@ redis-slave    ClusterIP   10.108.195.28    <none>        6379/TCP       2m
 todo-app       NodePort    10.110.174.222   <none>        80:31299/TCP   2m
 # Now we can demonstrate an rolling update
 # In the first step we watch the version of the Pod
-$ watch -n 0.1 curl -s http://192.168.99.100:31299/version
+# Or in your Browser with 192.168.99.100
+$ watch -n 0.1 curl -s http://127.0.0.1:31299/version
 # Now we deploy a new version of our todo-app
 $ kubectl -n todo-app set image deployments/todo-app todo-app=johscheuer/todo-app-web:dog
 # During the roll out the application is still available
@@ -298,7 +320,8 @@ $ kubectl -n todo-app get po -l name=todo-app
 # Let's make some noise
 # Install vegeta --> https://github.com/tsenart/vegeta
 # You need to adjust the nodeport --> kubectl get -n todo-ap service todo-ap -o jsonpath='{.spec.ports[].nodePort}' --> toDo
-$ echo GET http://192.168.99.100:32020 | vegeta attack -rate=75/s --duration=5m  | vegeta encode > results.json
+# Or externally with 192.168.99.100
+$ echo GET http://127.0.0.1:32020 | vegeta attack -rate=75/s --duration=5m  | vegeta encode > results.json
 # In another Terminal watch the HPA
 # The actual auto-scaling takes a while
 # After the load test the HPA will scale down the replicas again
