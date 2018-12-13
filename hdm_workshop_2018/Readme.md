@@ -14,7 +14,7 @@ $ sudo crictl pods --label=tier=control-plane
 $ systemctl status kubelet
 ```
 
-### Working with Kubernetes
+# Working with Kubernetes
 
 Run the following examples from your laptop. Let's start a simple nginx server:
 
@@ -237,7 +237,7 @@ $ kubectl -n todo-app set image deployments/todo-app todo-app=johscheuer/todo-ap
 # You can also check the application in your Browser
 ```
 
-### Auto Scaling
+# Auto Scaling
 
 In order to use Auto Sclaing we need to enable the [Metrics Server](https://github.com/kubernetes-incubator/metrics-server):
 
