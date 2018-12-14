@@ -10,10 +10,10 @@
 
 Start [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/) `minikube start` for the local development. Validate that minikube is up and running: `minikube status` and that you can access minikube from your laptop `kubectl get nodes`. In order to explore the components of Kubernetes ssh into the Minikube VM: `minikube ssh`.
 
-All inovex classes asume that you are inside of the Minikube VM. In order to be able to execute kubectl in Minikube we need to install `kubectl` and make the admin configuration available for the current user `docker`:
+All inovex classes assume that you are inside of the Minikube VM. In order to be able to execute kubectl in Minikube we need to install `kubectl` and make the admin configuration available for the current user `docker`:
 
 ```bash
-$ curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.13.0/bin/linux/amd64/kubectl
+$ curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.13.1/bin/linux/amd64/kubectl
 $ chmod +x kubectl
 $ sudo mv kubectl /bin
 $ mkdir -p ${HOME}/.kube
@@ -172,7 +172,7 @@ $ kubectl get po -o jsonpath='{.items[*].spec.containers[].image}'
 # What if we create a pod with the same labels like the generated ones?
 $ kubectl apply -f resources/simple-pod.yml
 pod/simple created
-# So wat does the deployment say?
+# So what does the deployment say?
 $ kubectl get deployment
 NAME      DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
 simple    3         3         3            3           34m
@@ -181,14 +181,14 @@ $ kubectl get rs
 NAME                DESIRED   CURRENT   READY     AGE
 simple-6556df596f   0         0         0         35m
 simple-7b5b886b8c   3         3         3         8m
-# But thw following query returns 4 Pods?
+# But the following query returns 4 Pods?
 $ kubectl get po -l app=simple
 NAME                      READY     STATUS    RESTARTS   AGE
 simple                    1/1       Running   0          3m
 simple-7b5b886b8c-6d87l   1/1       Running   0          8m
 simple-7b5b886b8c-j6f8q   1/1       Running   0          8m
 simple-7b5b886b8c-mpzvk   1/1       Running   0          8m
-# The reason is the selctor used by the ReplicaSet -> The requirements are ANDed
+# The reason is the selector used by the ReplicaSet -> The requirements are ANDed
 $ kubectl get rs simple-7b5b886b8c -o json | jq '.spec.selector'
 {
   "matchLabels": {
@@ -205,7 +205,7 @@ metadata:
   labels:
     pod-template-hash: ${POD_HASH}
 EOF
-# And now we can apply the patch to add the Pod hash to our own Po d
+# And now we can apply the patch to add the Pod hash to our own Pod
 $ kubectl patch pod simple --patch "$(cat patch.yml)"
 # You will see that our Pod will be deleted because now the ReplicaSet has 1 Pod to much
 # We can also adjust the replica size with the following command
@@ -319,7 +319,11 @@ todo-app   Deployment/todo-app   1%/40%    1         10        1          8m
 $ kubectl -n todo-app get po -l name=todo-app
 # Let's make some noise
 # Install vegeta --> https://github.com/tsenart/vegeta
-# You need to adjust the nodeport --> kubectl get -n todo-ap service todo-ap -o jsonpath='{.spec.ports[].nodePort}' --> toDo
+# With go get we download the dependencies of the program and build it
+# In the second step me move the built binary onto the host
+$ git clone https://github.com/tsenart/vegeta -b v12.1.0
+$ docker run -ti -v $(pwd)/vegeta:/go/src/github.com/tsenart/vegeta -v /bin:/hostbin --entrypoint=/bin/sh golang:1.11.3-stretch -c "go get github.com/tsenart/vegeta && mv /go/bin/vegeta /hostbin/vegeta"
+# You need to adjust the nodeport --> kubectl get -n todo-ap service todo-ap -o jsonpath='{.spec.ports[].nodePort}'
 # Or externally with 192.168.99.100
 $ echo GET http://127.0.0.1:32020 | vegeta attack -rate=75/s --duration=5m  | vegeta encode > results.json
 # In another Terminal watch the HPA

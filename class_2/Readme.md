@@ -53,7 +53,7 @@ $ kubectl get po -o jsonpath='{.items[*].spec.containers[].image}'
 # What if we create a pod with the same labels like the generated ones?
 $ kubectl apply  -f resources/simple-pod.yml
 pod/simple created
-# So wat does the deployment say?
+# So what does the deployment say?
 $ kubectl get deployment
 NAME      DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
 simple    3         3         3            3           34m
@@ -199,7 +199,13 @@ todo-app   Deployment/todo-app   1%/40%    1         10        1          8m
 $ kubectl -n todo-app get po -l name=todo-app
 # Let's make some noise
 # Install vegeta --> https://github.com/tsenart/vegeta
-$ echo GET http://192.168.99.100:32020 | vegeta attack -rate=75/s --duration=5m  | vegeta encode > results.json
+# With go get we download the dependencies of the program and build it
+# In the second step me move the built binary onto the host
+$ git clone https://github.com/tsenart/vegeta -b v12.1.0
+$ docker run -ti -v $(pwd)/vegeta:/go/src/github.com/tsenart/vegeta -v /bin:/hostbin --entrypoint=/bin/sh golang:1.11.3-stretch -c "go get github.com/tsenart/vegeta && mv /go/bin/vegeta /hostbin/vegeta"
+# You need to adjust the nodeport --> kubectl get -n todo-ap service todo-ap -o jsonpath='{.spec.ports[].nodePort}'
+# Or externally with 192.168.99.100
+$ echo GET http://127.0.0.1:32020 | vegeta attack -rate=75/s --duration=5m  | vegeta encode > results.json
 # In another Terminal watch the HPA
 # The actual auto-scaling takes a while
 # After the load test the HPA will scale down the replicas again
